@@ -1,3 +1,4 @@
+import 'package:delivery_go/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'registro_usuario_screen.dart';
 import 'registro_repartidor_screen.dart';
@@ -49,7 +50,6 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
     setState(() => _rolSeleccionado = rol);
     // Pequeño delay visual antes de navegar
     Future.delayed(const Duration(milliseconds: 200), () {
-      // tras elegir rol vamos a la pantalla de registro correspondiente
       if (!mounted) return;
       if (rol == 'repartidor') {
         Navigator.pushReplacement(
@@ -65,6 +65,15 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
     });
   }
 
+  void _irIniciarSesion() {
+    // Aquí puedes poner la pantalla de login
+    // Por ahora redirige a RegistroUsuarioScreen como ejemplo
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,19 +85,13 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
             position: _slideAnim,
             child: Column(
               children: [
-                // ── Top App Bar ─────────────────────────────────────
                 _buildAppBar(context),
-
-                // ── Contenido scrolleable ───────────────────────────
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     child: Column(
                       children: [
-                        // Welcome section
                         _buildWelcomeSection(),
-
-                        // Tarjetas de rol
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: Column(
@@ -115,17 +118,10 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 24),
-
-                        // Banner promo
                         _buildPromoBanner(),
-
                         const SizedBox(height: 24),
-
-                        // Footer login
                         _buildFooter(),
-
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -139,7 +135,6 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
     );
   }
 
-  // ── App Bar ───────────────────────────────────────────────────────────────
   Widget _buildAppBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -162,20 +157,17 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
               ),
             ),
           ),
-          // Placeholder para centrar el título
           const SizedBox(width: 48),
         ],
       ),
     );
   }
 
-  // ── Welcome Section ───────────────────────────────────────────────────────
   Widget _buildWelcomeSection() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
       child: Column(
         children: [
-          // Logo
           Container(
             width: 120,
             height: 120,
@@ -197,7 +189,6 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
               ),
             ),
           ),
-
           const Text(
             '¡Elige tu rol!',
             textAlign: TextAlign.center,
@@ -208,9 +199,7 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
               letterSpacing: -0.5,
             ),
           ),
-
           const SizedBox(height: 8),
-
           const Text(
             '¿Cómo te gustaría usar nuestra\nplataforma hoy?',
             textAlign: TextAlign.center,
@@ -221,7 +210,6 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
     );
   }
 
-  // ── Banner Promo ──────────────────────────────────────────────────────────
   Widget _buildPromoBanner() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -244,7 +232,6 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
         ),
         child: Stack(
           children: [
-            // Decoración de puntos
             Positioned(
               right: 16,
               top: 12,
@@ -254,7 +241,6 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
                 color: kPrimary.withAlpha((0.12 * 255).round()),
               ),
             ),
-            // Texto
             const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 32),
@@ -276,7 +262,6 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
     );
   }
 
-  // ── Footer ────────────────────────────────────────────────────────────────
   Widget _buildFooter() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -286,9 +271,7 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
           style: TextStyle(color: kTextMuted, fontSize: 14),
         ),
         GestureDetector(
-          onTap: () {
-            // Navigator.push(context, ...)
-          },
+          onTap: _irIniciarSesion,
           child: const Text(
             'Iniciar Sesión',
             style: TextStyle(
@@ -302,10 +285,6 @@ class _SeleccionRolScreenState extends State<SeleccionRolScreen>
     );
   }
 }
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  WIDGET: Tarjeta de Rol
-// ══════════════════════════════════════════════════════════════════════════════
 
 class _RolCard extends StatefulWidget {
   final String rol;
@@ -390,7 +369,6 @@ class _RolCardState extends State<_RolCard>
           ),
           child: Row(
             children: [
-              // Ícono
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: 72,
@@ -403,10 +381,7 @@ class _RolCardState extends State<_RolCard>
                 ),
                 child: Icon(widget.icono, size: 40, color: kPrimary),
               ),
-
               const SizedBox(width: 20),
-
-              // Texto
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,8 +407,6 @@ class _RolCardState extends State<_RolCard>
                   ],
                 ),
               ),
-
-              // Check mark cuando está seleccionado
               AnimatedOpacity(
                 opacity: widget.seleccionado ? 1.0 : 0.0,
                 duration: const Duration(milliseconds: 200),
@@ -458,4 +431,4 @@ class _RolCardState extends State<_RolCard>
       ),
     );
   }
-}
+}                             

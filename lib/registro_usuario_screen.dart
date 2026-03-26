@@ -21,11 +21,14 @@ class RegistroUsuarioScreen extends StatefulWidget {
 class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controladores
+  // ── Controladores ─────────────────────────────
   final _nombreCtrl = TextEditingController();
   final _docNumCtrl = TextEditingController();
   final _edadCtrl = TextEditingController();
   final _direccionCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
 
   String? _tipoDocumento;
   DateTime? _fechaNacimiento;
@@ -75,12 +78,7 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
       setState(() {
         _fechaNacimiento = picked;
         final edad =
-            hoy.year -
-            picked.year -
-            (hoy.month < picked.month ||
-                    (hoy.month == picked.month && hoy.day < picked.day)
-                ? 1
-                : 0);
+            hoy.year - picked.year - (hoy.month < picked.month || (hoy.month == picked.month && hoy.day < picked.day) ? 1 : 0);
         _edadCtrl.text = edad.toString();
       });
     }
@@ -88,15 +86,52 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
 
   // ── Submit ────────────────────────────────────────────────────────────────
   void _submitForm() {
+    if (_fotoPerfil == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Sube una foto de perfil'),
+          backgroundColor: kPrimary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
+    if (_fechaNacimiento == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Selecciona tu fecha de nacimiento'),
+          backgroundColor: kPrimary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
+    final hoy = DateTime.now();
+    final edad = hoy.year - _fechaNacimiento!.year - (hoy.month < _fechaNacimiento!.month || (hoy.month == _fechaNacimiento!.month && hoy.day < _fechaNacimiento!.day) ? 1 : 0);
+
+    if (edad < 18) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Debes ser mayor de 18 años'),
+          backgroundColor: kPrimary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('¡Registro completado exitosamente!'),
           backgroundColor: kPrimary,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -108,6 +143,9 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
     _docNumCtrl.dispose();
     _edadCtrl.dispose();
     _direccionCtrl.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
     super.dispose();
   }
 
@@ -145,25 +183,17 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Foto de perfil ──────────────────────────────────────
               _FotoPerfilWidget(foto: _fotoPerfil, onTap: _seleccionarFoto),
-
               const SizedBox(height: 32),
-
-              // ── Nombre Completo ─────────────────────────────────────
               _buildLabel('Nombre Completo'),
               const SizedBox(height: 6),
               _buildTextField(
                 controller: _nombreCtrl,
                 hint: 'Ej: Juan Pérez',
                 prefixIcon: Icons.person_outline,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Ingresa tu nombre' : null,
+                validator: (v) => v == null || v.isEmpty ? 'Ingresa tu nombre' : null,
               ),
-
               const SizedBox(height: 20),
-
-              // ── Tipo y Número de Documento ──────────────────────────
               Row(
                 children: [
                   Expanded(
@@ -177,8 +207,7 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                           items: _tiposDoc,
                           hint: 'Seleccionar',
                           onChanged: (v) => setState(() => _tipoDocumento = v),
-                          validator: (v) =>
-                              v == null ? 'Selecciona tipo' : null,
+                          validator: (v) => v == null ? 'Selecciona tipo' : null,
                         ),
                       ],
                     ),
@@ -194,22 +223,15 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                           controller: _docNumCtrl,
                           hint: '12345678',
                           keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          validator: (v) => v == null || v.isEmpty
-                              ? 'Ingresa el número'
-                              : null,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          validator: (v) => v == null || v.isEmpty ? 'Ingresa el número' : null,
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
-
-              // ── Fecha de Nacimiento y Edad ──────────────────────────
               Row(
                 children: [
                   Expanded(
@@ -218,10 +240,7 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                       children: [
                         _buildLabel('Fecha de Nacimiento'),
                         const SizedBox(height: 6),
-                        _buildDateField(
-                          fecha: _fechaNacimiento,
-                          onTap: _seleccionarFecha,
-                        ),
+                        _buildDateField(fecha: _fechaNacimiento, onTap: _seleccionarFecha),
                       ],
                     ),
                   ),
@@ -237,31 +256,71 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                           hint: '25',
                           keyboardType: TextInputType.number,
                           readOnly: true,
-                          validator: (v) =>
-                              v == null || v.isEmpty ? 'Requerida' : null,
+                          validator: (v) => v == null || v.isEmpty ? 'Requerida' : null,
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
-
-              // ── Dirección ───────────────────────────────────────────
               _buildLabel('Dirección Residencial'),
               const SizedBox(height: 6),
               _buildTextField(
                 controller: _direccionCtrl,
                 hint: 'Calle, Número, Barrio',
                 prefixIcon: Icons.location_on_outlined,
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Ingresa tu dirección' : null,
+                validator: (v) => v == null || v.isEmpty ? 'Ingresa tu dirección' : null,
+              ),
+
+              const SizedBox(height: 20),
+              // ── Correo y contraseña ─────────────────────────────
+              _buildLabel('Correo Electrónico'),
+              const SizedBox(height: 6),
+              _buildTextField(
+                controller: _emailCtrl,
+                hint: 'ejemplo@correo.com',
+                prefixIcon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Ingresa tu correo';
+                  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  if (!emailRegex.hasMatch(v)) return 'Correo no válido';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              _buildLabel('Contraseña'),
+              const SizedBox(height: 6),
+              _buildTextField(
+                controller: _passwordCtrl,
+                hint: '••••••••',
+                prefixIcon: Icons.lock_outline,
+                keyboardType: TextInputType.visiblePassword,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Ingresa tu contraseña';
+                  if (v.length < 6) return 'Mínimo 6 caracteres';
+                  return null;
+                },
+                obscureText: true,
+              ),
+              const SizedBox(height: 20),
+              _buildLabel('Confirmar Contraseña'),
+              const SizedBox(height: 6),
+              _buildTextField(
+                controller: _confirmPasswordCtrl,
+                hint: '••••••••',
+                prefixIcon: Icons.lock_outline,
+                keyboardType: TextInputType.visiblePassword,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Confirma tu contraseña';
+                  if (v != _passwordCtrl.text) return 'Las contraseñas no coinciden';
+                  return null;
+                },
+                obscureText: true,
               ),
 
               const SizedBox(height: 32),
-
-              // ── Botón submit ────────────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -288,8 +347,6 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
               ),
 
               const SizedBox(height: 16),
-
-              // ── Términos ────────────────────────────────────────────
               Center(
                 child: Wrap(
                   alignment: WrapAlignment.center,
@@ -331,7 +388,6 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
             ],
           ),
@@ -341,15 +397,14 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
   }
 
   // ── Helpers de UI ──────────────────────────────────────────────────────────
-
   Widget _buildLabel(String text) => Text(
-    text,
-    style: const TextStyle(
-      color: Color(0xFFCBD5E1), // slate-300
-      fontSize: 13,
-      fontWeight: FontWeight.w600,
-    ),
-  );
+        text,
+        style: const TextStyle(
+          color: Color(0xFFCBD5E1),
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      );
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -359,48 +414,47 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
     List<TextInputFormatter>? inputFormatters,
     bool readOnly = false,
     String? Function(String?)? validator,
-  }) => TextFormField(
-    controller: controller,
-    readOnly: readOnly,
-    keyboardType: keyboardType,
-    inputFormatters: inputFormatters,
-    validator: validator,
-    style: const TextStyle(color: kTextLight, fontSize: 15),
-    decoration: InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Color(0x66F1F5F9)),
-      prefixIcon: prefixIcon != null
-          ? Icon(
-              prefixIcon,
-              color: kPrimary.withAlpha((0.6 * 255).round()),
-              size: 22,
-            )
-          : null,
-      filled: true,
-      fillColor: kPrimary.withAlpha((0.08 * 255).round()),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: kBorder),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: kPrimary.withAlpha((0.2 * 255).round())),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: kPrimary, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
-      ),
-    ),
-  );
+    bool obscureText = false,
+  }) =>
+      TextFormField(
+        controller: controller,
+        readOnly: readOnly,
+        keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        validator: validator,
+        obscureText: obscureText,
+        style: const TextStyle(color: kTextLight, fontSize: 15),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Color(0x66F1F5F9)),
+          prefixIcon: prefixIcon != null
+              ? Icon(prefixIcon, color: kPrimary.withAlpha((0.6 * 255).round()), size: 22)
+              : null,
+          filled: true,
+          fillColor: kPrimary.withAlpha((0.08 * 255).round()),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: kBorder),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: kPrimary.withAlpha((0.2 * 255).round())),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: kPrimary, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.redAccent),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+          ),
+        ),
+      );
 
   Widget _buildDropdown({
     required String? value,
@@ -408,85 +462,69 @@ class _RegistroUsuarioScreenState extends State<RegistroUsuarioScreen> {
     required String hint,
     required void Function(String?) onChanged,
     String? Function(String?)? validator,
-  }) => DropdownButtonFormField<String>(
-    value: value,
-    validator: validator,
-    dropdownColor: kSurface,
-    iconEnabledColor: kPrimary,
-    style: const TextStyle(color: kTextLight, fontSize: 15),
-    decoration: InputDecoration(
-      filled: true,
-      fillColor: kPrimary.withAlpha((0.08 * 255).round()),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: kPrimary.withAlpha((0.2 * 255).round())),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: kPrimary.withAlpha((0.2 * 255).round())),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: kPrimary, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent),
-      ),
-    ),
-    hint: Text(
-      hint,
-      style: const TextStyle(color: Color(0x66F1F5F9), fontSize: 14),
-    ),
-    items: items
-        .map(
-          (e) => DropdownMenuItem(value: e['value'], child: Text(e['label']!)),
-        )
-        .toList(),
-    onChanged: onChanged,
-  );
+  }) =>
+      DropdownButtonFormField<String>(
+        value: value,
+        validator: validator,
+        dropdownColor: kSurface,
+        iconEnabledColor: kPrimary,
+        style: const TextStyle(color: kTextLight, fontSize: 15),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: kPrimary.withAlpha((0.08 * 255).round()),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: kPrimary.withAlpha((0.2 * 255).round())),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: kPrimary.withAlpha((0.2 * 255).round())),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: kPrimary, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.redAccent),
+          ),
+        ),
+        hint: Text(hint, style: const TextStyle(color: Color(0x66F1F5F9), fontSize: 14)),
+        items: items.map((e) => DropdownMenuItem(value: e['value'], child: Text(e['label']!))).toList(),
+        onChanged: onChanged,
+      );
 
-  Widget _buildDateField({
-    required DateTime? fecha,
-    required VoidCallback onTap,
-  }) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      decoration: BoxDecoration(
-        color: kPrimary.withAlpha((0.08 * 255).round()),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kPrimary.withAlpha((0.2 * 255).round())),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.calendar_today_outlined,
-            color: kPrimary.withAlpha((0.6 * 255).round()),
-            size: 18,
+  Widget _buildDateField({required DateTime? fecha, required VoidCallback onTap}) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          decoration: BoxDecoration(
+            color: kPrimary.withAlpha((0.08 * 255).round()),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: kPrimary.withAlpha((0.2 * 255).round())),
           ),
-          const SizedBox(width: 10),
-          Text(
-            fecha != null
-                ? '${fecha.day.toString().padLeft(2, '0')}/'
-                      '${fecha.month.toString().padLeft(2, '0')}/'
-                      '${fecha.year}'
-                : 'DD/MM/AAAA',
-            style: TextStyle(
-              color: fecha != null ? kTextLight : const Color(0x66F1F5F9),
-              fontSize: 15,
-            ),
+          child: Row(
+            children: [
+              Icon(Icons.calendar_today_outlined, color: kPrimary.withAlpha((0.6 * 255).round()), size: 18),
+              const SizedBox(width: 10),
+              Text(
+                fecha != null
+                    ? '${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}/${fecha.year}'
+                    : 'DD/MM/AAAA',
+                style: TextStyle(
+                  color: fecha != null ? kTextLight : const Color(0x66F1F5F9),
+                  fontSize: 15,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
-  );
+        ),
+      );
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  WIDGET: Foto de perfil
-// ══════════════════════════════════════════════════════════════════════════════
+// ── Widget Foto de Perfil ──────────────────────────────────────────────────
 class _FotoPerfilWidget extends StatelessWidget {
   final File? foto;
   final VoidCallback onTap;
@@ -502,30 +540,20 @@ class _FotoPerfilWidget extends StatelessWidget {
             onTap: onTap,
             child: Stack(
               children: [
-                // Avatar
                 Container(
                   width: 128,
                   height: 128,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: kPrimary.withAlpha((0.3 * 255).round()),
-                      width: 4,
-                    ),
+                    border: Border.all(color: kPrimary.withAlpha((0.3 * 255).round()), width: 4),
                     color: kPrimary.withAlpha((0.08 * 255).round()),
                   ),
                   child: ClipOval(
                     child: foto != null
                         ? Image.file(foto!, fit: BoxFit.cover)
-                        : const Icon(
-                            Icons.person_outline,
-                            size: 56,
-                            color: Color(0x66F48C25),
-                          ),
+                        : const Icon(Icons.person_outline, size: 56, color: Color(0x66F48C25)),
                   ),
                 ),
-
-                // Botón "+"
                 Positioned(
                   bottom: 4,
                   right: 4,
@@ -536,13 +564,7 @@ class _FotoPerfilWidget extends StatelessWidget {
                       color: kPrimary,
                       shape: BoxShape.circle,
                       border: Border.all(color: kBackground, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: kPrimary.withAlpha((0.4 * 255).round()),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      boxShadow: [BoxShadow(color: kPrimary.withAlpha((0.4 * 255).round()), blurRadius: 8, offset: const Offset(0, 2))],
                     ),
                     child: const Icon(Icons.add, color: Colors.white, size: 18),
                   ),
@@ -551,19 +573,7 @@ class _FotoPerfilWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Foto de Perfil',
-            style: TextStyle(
-              color: kTextLight,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Toca para subir una foto clara',
-            style: TextStyle(color: kTextMuted, fontSize: 13),
-          ),
+          const Text('Foto de Perfil', style: TextStyle(color: kTextMuted, fontSize: 13)),
         ],
       ),
     );

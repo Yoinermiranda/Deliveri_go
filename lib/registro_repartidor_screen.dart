@@ -25,6 +25,8 @@ class RegistroRepartidorScreen extends StatefulWidget {
 class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _plateController = TextEditingController();
 
   VehicleType _selectedVehicle = VehicleType.motocicleta;
@@ -44,6 +46,8 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     _plateController.dispose();
     super.dispose();
   }
@@ -63,6 +67,10 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
     }
   }
 
+  bool _isPlateRequired() =>
+      _selectedVehicle == VehicleType.motocicleta ||
+      _selectedVehicle == VehicleType.automovil;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,10 +78,7 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Top App Bar ──────────────────────────────────────────────
             _TopBar(),
-
-            // ── Formulario scrolleable ───────────────────────────────────
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -83,8 +88,6 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 24),
-
-                      // Header
                       const Text(
                         'Completa tu perfil',
                         style: TextStyle(
@@ -104,7 +107,7 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
                       ),
                       const SizedBox(height: 28),
 
-                      // ── Nombre completo ──────────────────────────────
+                      // Nombre completo
                       _SectionLabel('Nombre completo'),
                       const SizedBox(height: 8),
                       _AppTextField(
@@ -115,7 +118,39 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // ── Tipo de vehículo ─────────────────────────────
+                      // Correo electrónico
+                      _SectionLabel('Correo electrónico'),
+                      const SizedBox(height: 8),
+                      _AppTextField(
+                        controller: _emailController,
+                        hint: 'Ej. correo@ejemplo.com',
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Campo requerido';
+                          final emailRegex = RegExp(
+                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                          if (!emailRegex.hasMatch(v)) return 'Correo inválido';
+                          return null;
+                        },
+                        textCapitalization: TextCapitalization.none,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Contraseña
+                      _SectionLabel('Contraseña'),
+                      const SizedBox(height: 8),
+                      _AppTextField(
+                        controller: _passwordController,
+                        hint: 'Mínimo 6 caracteres',
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Campo requerido';
+                          if (v.length < 6) return 'La contraseña es muy corta';
+                          return null;
+                        },
+                        textCapitalization: TextCapitalization.none,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Tipo de vehículo
                       _SectionLabel('Tipo de vehículo'),
                       const SizedBox(height: 12),
                       _VehicleOption(
@@ -146,7 +181,7 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // ── Número de placa ──────────────────────────────
+                      // Número de placa
                       _SectionLabel('Número de placa'),
                       const SizedBox(height: 8),
                       _AppTextField(
@@ -158,6 +193,13 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
                           size: 20,
                         ),
                         textCapitalization: TextCapitalization.characters,
+                        validator: (v) {
+                          if (_isPlateRequired() &&
+                              (v == null || v.isEmpty)) {
+                            return 'Campo requerido para el vehículo seleccionado';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 4),
                       const Padding(
@@ -172,7 +214,7 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // ── Zona de trabajo ──────────────────────────────
+                      // Zona de trabajo
                       _SectionLabel('Zona de trabajo preferida'),
                       const SizedBox(height: 8),
                       _ZoneDropdown(
@@ -182,7 +224,7 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // ── Documentación ────────────────────────────────
+                      // Documentación
                       _SectionLabel('Documentación'),
                       const SizedBox(height: 12),
                       _DocumentUploadTile(
@@ -190,9 +232,8 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
                         title: 'Licencia de Conducir',
                         subtitle: 'Sube una foto clara',
                         uploaded: _licenseUploaded,
-                        onTap: () => setState(
-                          () => _licenseUploaded = !_licenseUploaded,
-                        ),
+                        onTap: () =>
+                            setState(() => _licenseUploaded = true),
                       ),
                       const SizedBox(height: 10),
                       _DocumentUploadTile(
@@ -200,13 +241,11 @@ class _RegistroRepartidorScreenState extends State<RegistroRepartidorScreen> {
                         title: 'Seguro Vigente',
                         subtitle: 'Póliza de seguro',
                         uploaded: _insuranceUploaded,
-                        onTap: () => setState(
-                          () => _insuranceUploaded = !_insuranceUploaded,
-                        ),
+                        onTap: () => setState(() => _insuranceUploaded = true),
                       ),
                       const SizedBox(height: 32),
 
-                      // ── Botón de envío ───────────────────────────────
+                      // Botón de envío
                       SizedBox(
                         width: double.infinity,
                         height: 52,
@@ -298,7 +337,7 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 48), // balance visual
+          const SizedBox(width: 48),
         ],
       ),
     );
@@ -413,7 +452,6 @@ class _VehicleOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Radio visual
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 20,
@@ -439,7 +477,6 @@ class _VehicleOption extends StatelessWidget {
                   : null,
             ),
             const SizedBox(width: 16),
-            // Texto
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,86 +573,73 @@ class _DocumentUploadTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.bgDark.withAlpha((0.5 * 255).round()),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: uploaded
-                ? AppColors.primary.withAlpha((0.6 * 255).round())
-                : AppColors.borderDark,
-            width: 1,
-            style: BorderStyle.solid,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.bgDark.withAlpha((0.5 * 255).round()),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: uploaded
+              ? AppColors.primary.withAlpha((0.6 * 255).round())
+              : AppColors.borderDark,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primary.withAlpha((0.12 * 255).round()),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 20),
           ),
-        ),
-        child: Row(
-          children: [
-            // Ícono circular
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withAlpha((0.12 * 255).round()),
-              ),
-              child: Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 16),
-            // Texto
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
+          ),
+          TextButton(
+            onPressed: onTap,
+            style: TextButton.styleFrom(
+              backgroundColor: uploaded
+                  ? AppColors.primary.withAlpha((0.15 * 255).round())
+                  : AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
               ),
             ),
-            // Botón / check
-            uploaded
-                ? const Icon(
-                    Icons.check_circle,
-                    color: AppColors.primary,
-                    size: 20,
-                  )
-                : TextButton(
-                    onPressed: onTap,
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      shape: const StadiumBorder(),
-                    ),
-                    child: const Text(
-                      'Subir',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-          ],
-        ),
+            child: Text(
+              uploaded ? 'Subido' : 'Subir',
+              style: TextStyle(
+                color: uploaded ? AppColors.primary : Colors.white,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
